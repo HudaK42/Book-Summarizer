@@ -5,6 +5,8 @@ from utils.database import get_db_connection
 from backend.text_extractor import extract_text
 from backend.text_preprocessor import process_text_pipeline
 
+
+
 # -------------------------------------------------
 # CREATE BLUEPRINT
 # -------------------------------------------------
@@ -99,6 +101,7 @@ def upload_file():
         "total_chunks": processed["total_chunks"]
     })
 
+
 @upload_bp.route("/books/paginated", methods=["GET"])
 def paginated_books():
     user_id = session.get("user_id")  or 1
@@ -117,3 +120,46 @@ def paginated_books():
 
     return jsonify([dict(r) for r in rows])
 
+@upload_bp.route("/submit_text", methods=["POST"])
+def submit_text():
+    user_id = session.get("user_id") or 1
+    data = request.get_json()
+
+    if not data or not data.get("text"):
+        return jsonify({"status": "error", "message": "Text missing"}), 400
+
+    raw_text = data["text"].strip()
+
+    processed = process_text_pipeline(raw_text)
+    cleaned_text = processed["cleaned_text"]
+
+    title = data.get("title", "Untitled")
+    author = data.get("author", "")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO books (user_id, author, title, original_text, file_type, status)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            user_id,
+            author,
+            title,
+            cleaned_text,
+            "text",
+            "uploaded"
+        ),
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "Text submitted successfully",
+        "language": processed["language"],
+        "total_chunks": processed["total_chunks"]
+    })

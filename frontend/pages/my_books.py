@@ -325,11 +325,14 @@ def my_books_page():
             )
             st.json(res.json())
 
-        if b.button("📝 Summarize", key=f"sum_{book['book_id']}"):
-            st.session_state.session_obj.post(
-                f"{BACKEND_URL}/books/{book['book_id']}/summarize"
-            )
-            st.success("Summarization started")
+        
+       
+
+        if b.button("🧠 View Summaries", key=f"sum_{book['book_id']}"):
+            st.session_state.selected_book_id = book["book_id"]
+            st.session_state.page = "Summaries"
+            st.rerun()
+
 
         if c.button("🗑 Delete", key=f"del_{book['book_id']}"):
             st.session_state.session_obj.delete(

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Book Summary Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    select, textarea, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    button { cursor: pointer; background-color: #4CAF50; color: white; font-weight: bold; }
+    .loading { display: none; margin-top: 10px; }
+    .summary-output { margin-top: 20px; white-space: pre-wrap; font-size: 1.1em; line-height: 1.6; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Summary Generation</h1>
+
+  <!-- Book Selection or Text Input -->
+  <label>Select Uploaded Book:</label>
+  <select id="book-select">
+    <option value="">--Select a Book--</option>
+  </select>
+
+  <label>Or Paste New Text:</label>
+  <textarea id="text-input" rows="8" placeholder="Paste book text here..."></textarea>
+
+  <!-- Summary Options -->
+  <label>Summary Length:</label>
+  <select id="summary-length">
+    <option value="short">Short</option>
+    <option value="medium">Medium</option>
+    <option value="long">Long</option>
+  </select>
+
+  <label>Summary Style:</label>
+  <select id="summary-style">
+    <option value="paragraphs">Paragraphs</option>
+    <option value="bullets">Bullets</option>
+  </select>
+
+  <label>Detail Level:</label>
+  <select id="summary-detail">
+    <option value="concise">Concise</option>
+    <option value="detailed">Detailed</option>
+  </select>
+
+  <button id="generate-btn">Generate Summary</button>
+
+  <div class="loading" id="loading">Generating summary... ⏳</div>
+
+  <!-- Output -->
+  <div class="summary-output" id="summary-output"></div>
+</div>
+
+<script>
+  async function fetchBooks() {
+    const res = await fetch('/upload/books/paginated?page_no=1&limit=100');
+    const data = await res.json();
+    const select = document.getElementById('book-select');
+    data.forEach(book => {
+      const option = document.createElement('option');
+      option.value = book.book_id;
+      option.text = book.title;
+      select.appendChild(option);
+    });
+  }
+
+  document.getElementById('generate-btn').addEventListener('click', async () => {
+    const bookId = document.getElementById('book-select').value;
+    const text = document.getElementById('text-input').value.trim();
+    const length = document.getElementById('summary-length').value;
+    const style = document.getElementById('summary-style').value;
+    const detail = document.getElementById('summary-detail').value;
+
+    if (!bookId && !text) {
+      alert('Please select a book or paste text.');
+      return;
+    }
+
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('summary-output').innerText = '';
+
+    try {
+      const payload = {
+        book_id: bookId || null,
+        text: text || null,
+        length,
+        style,
+        detail
+      };
+
+      const res = await fetch('/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      document.getElementById('loading').style.display = 'none';
+
+      if (data.status === 'success') {
+        document.getElementById('summary-output').innerText = data.summary;
+      } else {
+        document.getElementById('summary-output').innerText = data.message || 'Error generating summary.';
+      }
+    } catch (err) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('summary-output').innerText = 'Error connecting to server.';
+      console.error(err);
+    }
+  });
+
+  // Load books on page load
+  fetchBooks();
+</script>
+</body>
+</html>

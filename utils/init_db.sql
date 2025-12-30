@@ -46,10 +46,3 @@ CREATE INDEX IF NOT EXISTS idx_summaries_book_id ON summaries(book_id);
 
 
 
-
--- Only add the new column
-ALTER TABLE books
-ADD COLUMN file_path TEXT;
-
-
-

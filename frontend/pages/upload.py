@@ -126,6 +126,9 @@ def upload_page():
 
             if res.status_code == 200 and response.get("status") == "success":
                 st.success(response.get("message", "Upload successful"))
+                ## additional info
+                st.write("Language:", response.get("language", "-"))
+                st.write("Total Chunks:", response.get("total_chunks", "-"))
             else:
                 st.error(response.get("message", "Upload failed"))
 
@@ -159,5 +162,8 @@ def upload_page():
 
             if res.status_code == 200 and response.get("status") == "success":
                 st.success(response.get("message", "Text submitted successfully"))
+                ## additional info
+                st.write("Language:", response.get("language", "-"))
+                st.write("Total Chunks:", response.get("total_chunks", "-"))
             else:
                 st.error(response.get("message", "Submission failed"))

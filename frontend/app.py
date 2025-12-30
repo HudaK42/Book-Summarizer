@@ -1,6 +1,10 @@
+#frontend/app.py
 import streamlit as st
 import requests
 from pages import intro, dashboard
+from pages import admin_dashboard
+
+
 import auth
 
 BACKEND_URL = "http://127.0.0.1:5000"
@@ -40,9 +44,25 @@ def is_logged_in():
     except:
         return False
 
+# # ---------------- ROUTING ----------------
+# if is_logged_in():
+#     dashboard.dashboard_page()
+# elif st.session_state.page in ["login", "register"]:
+#     auth.auth_page()
+# else:
+#     intro.intro_page()
+
+
 # ---------------- ROUTING ----------------
 if is_logged_in():
-    dashboard.dashboard_page()
+    role = st.session_state.get("role")
+
+    if role == "admin":
+        from pages import admin_dashboard
+        admin_dashboard.admin_dashboard()
+    else:
+        dashboard.dashboard_page()
+
 elif st.session_state.page in ["login", "register"]:
     auth.auth_page()
 else:

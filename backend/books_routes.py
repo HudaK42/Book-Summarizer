@@ -2,6 +2,10 @@ import os
 from flask import Blueprint, request, jsonify, session
 from utils.database import get_db_connection
 
+
+
+
+
 books_bp = Blueprint("books_bp", __name__)
 
 
@@ -99,21 +103,16 @@ def get_book(book_id):
 
     return jsonify(dict(book))
 
-
-@books_bp.route("/books/<int:book_id>/summarize", methods=["POST"])
-def summarize_book(book_id):
-    user_id = session.get("user_id")
-
+def summary_exists(book_id, user_id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute(
-        "UPDATE books SET status='processing' WHERE book_id=? AND user_id=?",
-        (book_id, user_id)
-    )
-    conn.commit()
+    cur.execute("""
+        SELECT COUNT(*) FROM summaries
+        WHERE book_id=? AND user_id=?
+    """, (book_id, user_id))
+    count = cur.fetchone()[0]
     conn.close()
-
-    return jsonify({"message": "Summarization started"})
+    return count > 0
 
 
 @books_bp.route("/books/<int:book_id>", methods=["DELETE"])

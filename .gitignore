@@ -22,7 +22,9 @@
 
 # Virtual environment
 venv/
+venv310/
 .venv/
+
 
 # Python cache
 __pycache__/
